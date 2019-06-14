@@ -1,0 +1,128 @@
+apply plugin: 'com.android.library'
+apply plugin: 'com.novoda.bintray-release' // must be applied after your artifact generating plugin (eg. java / com.android.library)
+
+buildscript {
+    repositories {
+        jcenter()
+        google()
+    }
+    dependencies {
+        classpath 'com.novoda:bintray-release:0.8.0'
+    }
+}
+
+repositories {
+    flatDir {
+        dirs 'libs'
+    }
+}
+
+def libVersion = "v2.2"
+
+android {
+    compileSdkVersion 27
+    buildToolsVersion '27.0.3'
+
+    dataBinding {
+        enabled = true
+    }
+
+    testOptions {
+        unitTests.returnDefaultValues = true
+    }
+
+    defaultConfig {
+        minSdkVersion 16
+        targetSdkVersion 27
+        versionCode 1
+        versionName libVersion
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+
+        debug {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    libraryVariants.all { variant ->
+        variant.outputs.all { output ->
+            outputFileName = "tubiplayer-${libVersion}.aar"
+        }
+    }
+}
+
+dependencies {
+    def supportLibraryVersion = '27.1.1'
+    def playServiceVersion = '16.0.3'
+
+    configurations {
+        all*.exclude group: 'com.android.support', module: 'support-v13'
+    }
+
+    api fileTree(dir: 'libs', include: ['*.jar'])
+
+    api(name: 'vaud-text-view-0.0.2', ext: 'aar')
+    api(name: 'tubi-loading-view-0.0.5', ext: 'aar')
+
+    api 'com.afollestad.material-dialogs:core:0.9.4.5'
+    api 'com.squareup.picasso:picasso:2.5.2'
+
+    api 'com.google.android.exoplayer:exoplayer:2.8.4'
+    api "com.android.support:appcompat-v7:${supportLibraryVersion}"
+    api 'com.android.support.constraint:constraint-layout:1.0.2'
+    api "com.android.support:design:${supportLibraryVersion}"
+
+    //chromecast
+    api "com.android.support:mediarouter-v7:${supportLibraryVersion}"
+    api "com.google.android.gms:play-services-cast-framework:${playServiceVersion}"
+
+    //dagger 2
+    api "com.google.dagger:dagger:2.9"
+    annotationProcessor "com.google.dagger:dagger-compiler:2.9"
+    compileOnly 'javax.annotation:jsr250-api:1.0'
+
+    androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+
+    api "android.arch.lifecycle:runtime:1.0.3"
+
+//    compile('com.crashlytics.sdk.android:crashlytics:2.6.7@aar') {
+//        transitive = true;
+//    }
+    testImplementation 'junit:junit:4.12'
+    testImplementation 'org.mockito:mockito-core:1.10.19'
+}
+
+//Properties properties = new Properties()
+//File propFile = "${System.properties['user.home']}${File.separator}.gradle${File.separator}bintray.properties" as File
+//properties.load(propFile.newDataInputStream())
+publish {
+    userOrg = 'tubitv'
+    repoName = 'Media'
+    groupId = 'com.tubitv.media'
+    artifactId = 'tubi-player'
+    publishVersion = libVersion
+    licences = ['MIT']
+    desc = 'A media streaming video player based on ExoPlayer from google, with convenience methods for ad supported content'
+    website = 'https://github.com/Tubitv/TubiPlayer'
+
+//    dryRun = true
+//    bintrayUser = properties.getProperty("bintray.user")
+//    bintrayKey = properties.getProperty("bintray.apikey")
+//  ./gradlew clean build bintrayUpload -PbintrayUser=user -PbintrayKey=key -PdryRun=false
+}
